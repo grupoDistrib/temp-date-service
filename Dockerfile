@@ -1,17 +1,20 @@
-# Usa Node.js base
+# Usa una imagen base oficial de Node.js
 FROM node:18
 
-# Crea el directorio de trabajo
+# Establece el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copia los archivos
+# Copia los archivos de definición de dependencias
 COPY package*.json ./
+
+# Instala las dependencias
 RUN npm install
 
+# Copia el resto del código fuente
 COPY . .
 
-# Puerto expuesto para Heroku
+# Expone el puerto que tu app usará
 EXPOSE 3000
 
-# Comando de inicio
+# Comando para correr la app
 CMD ["node", "index.js"]
