@@ -38,6 +38,7 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Asegúrate de que la app escuche el puerto correcto en Heroku
 app.listen(PORT, () => {
   console.log(`🌍 Servicio disponible en http://localhost:${PORT}`);
 });
