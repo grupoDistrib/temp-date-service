@@ -1,18 +1,17 @@
-# Imagen base
-FROM node:18-alpine
+# Usa Node.js base
+FROM node:18
 
-# Crear directorio de trabajo
+# Crea el directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos necesarios
+# Copia los archivos
 COPY package*.json ./
 RUN npm install
 
-# Copiar el resto del proyecto
 COPY . .
 
-# Exponer puerto
+# Puerto expuesto para Heroku
 EXPOSE 3000
 
-# Comando para correr el servidor
+# Comando de inicio
 CMD ["node", "index.js"]
