@@ -1,39 +1,43 @@
-require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
-const moment = require('moment-timezone');
 const cors = require('cors');
+const moment = require('moment-timezone');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 
-const PORT = process.env.PORT || 3000;
-const lat = process.env.LAT || -0.22985;
-const lon = process.env.LON || -78.52495;
-const API_KEY = process.env.OPENWEATHER_API_KEY;
+app.get('/info', async (req, res) => {
+  const apiKey = process.env.WEATHER_API_KEY;
+  const lat = -0.22985; // Quito
+  const lon = -78.52495;
+  const location = `${lat},${lon}`;
 
-app.get('/', async (req, res) => {
+  const weatherUrl = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}`;
+
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-    const response = await axios.get(url);
+    const response = await axios.get(weatherUrl);
+    const weatherData = response.data;
 
-    const temperature = response.data.main.temp;
-    const description = response.data.weather[0].description;
-    const dateInEcuador = moment().tz('America/Guayaquil').format('YYYY-MM-DD HH:mm:ss');
+    const temperatura = weatherData.current.temp_c;
+    const ciudad = weatherData.location.name;
+    const pais = weatherData.location.country;
+    const fechaHora = moment().tz("America/Guayaquil").format("YYYY-MM-DD HH:mm:ss");
 
     res.json({
-      location: response.data.name,
-      temperature: `${temperature} °C`,
-      description,
-      datetime: dateInEcuador,
-      timezone: 'America/Guayaquil',
+      ciudad,
+      pais,
+      temperatura,
+      fecha_hora: fechaHora
     });
   } catch (error) {
-    console.error(error.message);
+    console.error('Error al obtener datos del clima:', error.message);
     res.status(500).json({ error: 'No se pudo obtener el clima.' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🌍 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
