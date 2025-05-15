@@ -1,49 +1,51 @@
-// index.js
+const express = require('express');
+const axios = require('axios');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const moment = require('moment-timezone');
 
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-const moment = require("moment-timezone");
-require("dotenv").config();
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
-app.use(express.json());
 
-// Ruta raíz
-app.get("/", async (req, res) => {
+app.get('/', (req, res) => {
+  res.send('Microservicio activo: Temp & Date API');
+});
+
+app.get('/weather', async (req, res) => {
+  const location = process.env.LOCATION || 'Quito,EC';
+  const [city, country] = location.split(',');
+
   try {
-    // Obtener la fecha actual en la zona horaria de Ecuador
-    const currentDate = moment().tz("America/Guayaquil").format("YYYY-MM-DD HH:mm:ss");
-
-    // Ciudad por defecto o la que pase por query
-    const city = req.query.city || "Quito";
-
-    // API Key desde .env
-    const apiKey = process.env.WEATHER_API_KEY;
-    const weatherUrl = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}&aqi=no`;
-
-    const response = await axios.get(weatherUrl);
-
-    const tempC = response.data.current.temp_c;
-    const condition = response.data.current.condition.text;
-
-    res.json({
-      fecha: currentDate,
-      ciudad: city,
-      temperatura_celsius: tempC,
-      condicion: condition
+    const response = await axios.get(`https://api.open-meteo.com/v1/forecast`, {
+      params: {
+        latitude: 0.1807, // Latitud de Quito
+        longitude: -78.4678, // Longitud de Quito
+        current_weather: true,
+        timezone: 'America/Guayaquil',
+      },
     });
+
+    const { current_weather } = response.data;
+
+    const weatherInfo = {
+      location: `${city}, ${country}`,
+      temperature: current_weather.temperature,
+      wind_speed: current_weather.windspeed,
+      humidity: current_weather.relative_humidity,
+      time: moment.tz('America/Guayaquil').format('YYYY-MM-DD HH:mm:ss'),
+    };
+
+    res.json(weatherInfo);
   } catch (error) {
-    console.error("Error obteniendo el clima:", error.message);
-    res.status(500).json({ error: "No se pudo obtener el clima." });
+    console.error('Error obteniendo el clima:', error);
+    res.status(500).json({ error: 'No se pudo obtener el clima.' });
   }
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Microservicio activo: Temp & Date API en http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Servidor corriendo en http://localhost:${port}`);
 });
