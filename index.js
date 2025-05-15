@@ -1,39 +1,40 @@
+// index.js
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
 const moment = require('moment-timezone');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Ruta raíz para verificar estado
+app.get('/', (req, res) => {
+  res.send('Microservicio activo: Temp & Date API');
+});
 
-app.get('/info', async (req, res) => {
-  const apiKey = process.env.WEATHER_API_KEY;
-  const lat = -0.22985; // Quito
-  const lon = -78.52495;
-  const location = `${lat},${lon}`;
-
-  const weatherUrl = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}`;
-
+// Ruta principal de temperatura y fecha
+app.get('/api/temperatura', async (req, res) => {
   try {
-    const response = await axios.get(weatherUrl);
-    const weatherData = response.data;
+    const location = 'Quito'; // o cualquier ciudad válida para WeatherAPI
+    const apiKey = process.env.WEATHER_API_KEY;
 
-    const temperatura = weatherData.current.temp_c;
-    const ciudad = weatherData.location.name;
-    const pais = weatherData.location.country;
-    const fechaHora = moment().tz("America/Guayaquil").format("YYYY-MM-DD HH:mm:ss");
+    const weatherURL = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
+
+    const response = await axios.get(weatherURL);
+    const temperature = response.data.current.temp_c;
+
+    const now = moment().tz('America/Guayaquil');
+    const fecha = now.format('YYYY-MM-DD');
+    const hora = now.format('HH:mm:ss');
 
     res.json({
-      ciudad,
-      pais,
-      temperatura,
-      fecha_hora: fechaHora
+      location,
+      temperatura: `${temperature} °C`,
+      fecha,
+      hora,
     });
   } catch (error) {
-    console.error('Error al obtener datos del clima:', error.message);
+    console.error(error.message);
     res.status(500).json({ error: 'No se pudo obtener el clima.' });
   }
 });
