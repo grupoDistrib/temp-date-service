@@ -1,44 +1,39 @@
-// index.js
-const express = require('express');
-const axios = require('axios');
-const moment = require('moment-timezone');
-require('dotenv').config();
+const express = require("express");
+const axios = require("axios");
+const moment = require("moment-timezone");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.WEATHER_API_KEY;
+const LOCATION = "Quito"; // Puedes cambiarlo por cualquier ciudad válida
 
-// Ruta raíz para verificar estado
-app.get('/', (req, res) => {
-  res.send('Microservicio activo: Temp & Date API');
-});
-
-// Ruta principal de temperatura y fecha
-app.get('/api/temperatura', async (req, res) => {
+app.get("/", async (req, res) => {
   try {
-    const location = 'Quito'; // o cualquier ciudad válida para WeatherAPI
-    const apiKey = process.env.WEATHER_API_KEY;
+    // Obtener la hora actual en la zona horaria de Ecuador
+    const ecuadorTime = moment().tz("America/Guayaquil").format("YYYY-MM-DD HH:mm:ss");
 
-    const weatherURL = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=no`;
+    // Llamada a WeatherAPI.com
+    const weatherUrl = `http://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${LOCATION}&aqi=no`;
+    const response = await axios.get(weatherUrl);
 
-    const response = await axios.get(weatherURL);
-    const temperature = response.data.current.temp_c;
-
-    const now = moment().tz('America/Guayaquil');
-    const fecha = now.format('YYYY-MM-DD');
-    const hora = now.format('HH:mm:ss');
+    const temperatureC = response.data.current.temp_c;
+    const condition = response.data.current.condition.text;
 
     res.json({
-      location,
-      temperatura: `${temperature} °C`,
-      fecha,
-      hora,
+      microservicio: "Temp & Date API",
+      hora_ecuador: ecuadorTime,
+      ubicacion: LOCATION,
+      temperatura_celsius: temperatureC,
+      estado_clima: condition
     });
+
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ error: 'No se pudo obtener el clima.' });
+    console.error("Error al obtener datos del clima:", error.message);
+    res.status(500).json({ error: "No se pudo obtener el clima." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
