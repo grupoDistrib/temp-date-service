@@ -1,51 +1,54 @@
+require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
-const dotenv = require('dotenv');
 const cors = require('cors');
+const axios = require('axios');
 const moment = require('moment-timezone');
 
-dotenv.config();
-
 const app = express();
-const port = process.env.PORT || 4000;
+const PORT = 4000;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const WEATHER_API_URL = 'http://api.weatherapi.com/v1/current.json';
 
 app.use(cors());
 
-app.get('/', (req, res) => {
-  res.send('Microservicio activo: Temp & Date API');
-});
-
+// Ruta para obtener fecha actual (zona Ecuador) y clima de ciudad consultada
 app.get('/weather', async (req, res) => {
-  const location = process.env.LOCATION || 'Quito,EC';
-  const [city, country] = location.split(',');
+  const city = req.query.city;
+
+  if (!city) {
+    return res.status(400).json({ error: 'Por favor, provee la ciudad en query param ?city=' });
+  }
 
   try {
-    const response = await axios.get(`https://api.open-meteo.com/v1/forecast`, {
+    const response = await axios.get(WEATHER_API_URL, {
       params: {
-        latitude: 0.1807, // Latitud de Quito
-        longitude: -78.4678, // Longitud de Quito
-        current_weather: true,
-        timezone: 'America/Guayaquil',
-      },
+        key: WEATHER_API_KEY,
+        q: city,
+        lang: 'es'
+      }
     });
 
-    const { current_weather } = response.data;
+    const data = response.data;
 
-    const weatherInfo = {
-      location: `${city}, ${country}`,
-      temperature: current_weather.temperature,
-      wind_speed: current_weather.windspeed,
-      humidity: current_weather.relative_humidity,
-      time: moment.tz('America/Guayaquil').format('YYYY-MM-DD HH:mm:ss'),
-    };
+    // Fecha actual en zona horaria Ecuador (America/Guayaquil)
+    const fechaEcuador = moment().tz('America/Guayaquil').format('YYYY-MM-DD HH:mm:ss');
 
-    res.json(weatherInfo);
+    return res.json({
+      fecha_actual_ecuador: fechaEcuador,
+      ciudad: data.location.name,
+      region: data.location.region,
+      pais: data.location.country,
+      temperatura_celsius: data.current.temp_c,
+      condicion: data.current.condition.text
+    });
   } catch (error) {
-    console.error('Error obteniendo el clima:', error);
-    res.status(500).json({ error: 'No se pudo obtener el clima.' });
+    console.error('Error obteniendo clima:', error.message);
+    return res.status(500).json({ error: 'No se pudo obtener el clima.' });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Microservicio activo: Temp & Date API`);
+  console.log(`Escuchando en http://localhost:${PORT}`);
+  console.log(`Consulta clima con /weather?city=Quito`);
 });
