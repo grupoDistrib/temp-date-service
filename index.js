@@ -12,7 +12,7 @@ const DEFAULT_CITY = "Quito";
 
 app.use(cors());
 
-// Ruta para obtener clima (con ciudad query param)
+// Ruta para obtener clima (con ciudad como query param)
 app.get('/weather', async (req, res) => {
   const city = req.query.city || DEFAULT_CITY;
 
@@ -43,6 +43,7 @@ app.get('/weather', async (req, res) => {
       condition_icon,
     });
   } catch (error) {
+    console.error("Error obteniendo el clima:", error.message);
     res.status(500).json({ error: 'Error obteniendo el clima.' });
   }
 });
@@ -76,6 +77,7 @@ app.get('/', async (req, res) => {
       condition_icon,
     });
   } catch (error) {
+    console.error("Error obteniendo el clima:", error.message);
     res.status(500).json({ error: 'Error obteniendo el clima.' });
   }
 });
