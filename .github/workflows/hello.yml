@@ -1,0 +1,17 @@
+name: Hello Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  saludo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Mensaje de saludo
+        run: echo "👋 Hola profesor JuanPa90Cap, este es un Pull Request enviado automáticamente desde GitHub Actions. ¡Gracias por revisar!"

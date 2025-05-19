@@ -1,0 +1,29 @@
+name: Node.js Deploy Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar pruebas
+        run: npm test
+
+      # Puedes agregar aquí tu paso de despliegue (opcional)
+      # - name: Desplegar a producción
+      #   run: npm run deploy
